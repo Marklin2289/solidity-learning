@@ -55,7 +55,7 @@ contract VerifySig {
         return ecrecover(_ethSignedMessageHash, v, r, s);
     }
 
-    // Function to verify signature
+    // Function to verify signature ---- main function
     // returns true if `_message` is the signed by `_signer`
     function verify(
         address _signer,
@@ -73,5 +73,10 @@ contract VerifySig {
     function testSignature(address _signer, bytes memory _sig) external {
         string memory message = "secret";
         // Write code here
+        bytes32 messageHash = getMessageHash(message);
+        bytes32 ethSignedMessageHash =getEthSignedMessageHash(messageHash);
+
+        require((recover(ethSignedMessageHash, _sig) == _signer), "invalid signature...");
+        signed = true;
     }
 }
