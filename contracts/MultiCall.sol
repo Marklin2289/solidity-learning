@@ -2,8 +2,24 @@
 pragma solidity ^0.8.17;
 
 contract TestMultiCall {
-    function test(uint _i) external pure returns (uint) {
-        return _i;
+    function test(uint _i) external view returns (uint, uint) {
+        return (_i, block.timestamp);
+    }
+    function fun1() external view returns(uint, uint) {
+        return (1, block.timestamp);
+    }
+    function fun2() external view returns(uint, uint) {
+        return (2, block.timestamp);
+    }
+    function getTestData(uint _i) external pure returns(bytes memory){
+        return abi.encodeWithSelector(this.test.selector, _i);
+    }
+    function getData1() external pure returns(bytes memory){
+        // abi.encodeWithSignature("func1()");
+        return abi.encodeWithSelector(this.fun1.selector);
+    }
+    function getData2() external pure returns(bytes memory){
+        return abi.encodeWithSelector(this.fun2.selector);
     }
 }
 contract MultiCall {
