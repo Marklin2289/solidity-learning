@@ -187,6 +187,11 @@ contract CPAMM {
     function removeLiquidity(
         uint _shares
     ) external returns (uint amount0, uint amount1) {
+        // calculate amount0 and amount1 to withdraw
+        //  Burn shares
+        // Update reserves
+        // Transfer token0 and token1 to msg.sender
+
         /*
         How many tokens to withdraw?
 
