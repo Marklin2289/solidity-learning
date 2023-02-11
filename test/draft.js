@@ -32,3 +32,5 @@ console.log("y = 50000, share is              : " + _sqrt(50000));
 console.log("y = 5000000, share is            : " + _sqrt(5000000));
 console.log("y = 500000000, share is          : " + _sqrt(500000000));
 console.log("y = 500000000000000000, share is : " + _sqrt(500000000000000000));
+
+d = a / b * c 

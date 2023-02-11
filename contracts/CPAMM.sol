@@ -188,10 +188,20 @@ contract CPAMM {
         uint _shares
     ) external returns (uint amount0, uint amount1) {
         // calculate amount0 and amount1 to withdraw
+        // dx, dy = amount of liquidity to remove
+        // dx = s / T * x
+        // dy = s / T * y
+        uint bal0 = token0.balanceOf(address(this));
+        uint bal1 = token1.balanceOf(address(this));
+        amount0 = (_shares * bal0) / totalSupply; // dx/x = s/t => s = dx/x * t 
+        amount1 = (_shares * bal1) / totalSupply;
         //  Burn shares
+        _burn(msg.msg.sender,_shares);
         // Update reserves
+        _update(bal0 - amount0, bal1 - amount1);
         // Transfer token0 and token1 to msg.sender
-
+        token0.transfer(msg.sender, amount0);
+        token1.transfer(msg.sender, amount1);
         /*
         How many tokens to withdraw?
 
@@ -235,7 +245,7 @@ contract CPAMM {
             uint x = y / 2 + 1;
             while (x < z) {
                 z = x;
-                x = (y / x + x) / 2;
+                x = (y / x + x) / 2;`
             }
         } else if (y != 0) {
             z = 1;
