@@ -59,8 +59,8 @@ contract CPAMM {
         // transfer tokenIn into address(this):
         tokenIn.transferFrom(msg.sender, address(this), _amountIn);
         // calculate token out (inclding fee), fee = 0.3%
-        // dy = ydx / (x + dx) : calculate amountOut dy
         uint amountInWithFee = (_amountIn * 997) / 1000;
+        // dy = ydx / (x + dx) : calculate amountOut dy
         amountOut = (reserveOut * amountInWithFee) / (reserveIn + amountInWithFee) // dy
         // Transfer token out to msg.sender:
         tokenOut.transfer(msg.sender, amountOut)
@@ -193,10 +193,14 @@ contract CPAMM {
         // dy = s / T * y
         uint bal0 = token0.balanceOf(address(this));
         uint bal1 = token1.balanceOf(address(this));
-        amount0 = (_shares * bal0) / totalSupply; // dx/x = s/t => s = dx/x * t 
+        // dx/x = s/t => s = dx/x * t => dx = s / t * x
+        // 1 / 2 * 3 = 1.5; 1
+        amount0 = (_shares * bal0) / totalSupply; 
         amount1 = (_shares * bal1) / totalSupply;
+        // check amount0 and amount1 > 0 
+        require(amount0 > 0 && amount1 > 0,"amount0 or amount1 = 0");
         //  Burn shares
-        _burn(msg.msg.sender,_shares);
+        _burn(msg.sender,_shares);
         // Update reserves
         _update(bal0 - amount0, bal1 - amount1);
         // Transfer token0 and token1 to msg.sender
@@ -240,12 +244,12 @@ contract CPAMM {
     }
 
     function _sqrt(uint y) private pure returns (uint z) {
-        if (y > 3) {
-            z = y;
-            uint x = y / 2 + 1;
-            while (x < z) {
-                z = x;
-                x = (y / x + x) / 2;`
+        if (y > 3) {  // y = 4
+            z = y;  // z = 4
+            uint x = y / 2 + 1; // x = 3
+            while (x < z) { // 3 < 4 ?
+                z = x; // z = 3
+                x = (y / x + x) / 2; // x = 4 / 6
             }
         } else if (y != 0) {
             z = 1;
