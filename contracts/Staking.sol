@@ -64,42 +64,57 @@ contract StakingRewards {
     }
 
     modifier updateReward(address _account) {
-        // Code
+        rewardPerTokenStored = rewardPerToken();
+        updatedAt = lastTimeRewardApplicable();
+
+        if (_account != address(0)) {
+            rewards[_account] = earned(_account);
+            userRewardPerTokenPaid[_account] = rewardPerTokenStored;
+        }
         _;
     }
-    function stake(uint _amount) external {
+
+    function stake(uint _amount) external updateReward(msg.sender) {
         require(_amount > 0, "amount must be greater than zero");
         stakingToken.transferFrom(msg.sender, address(this), _amount);
         balanceOf[msg.sender] += _amount;
         totalSupply += _amount;
     }
 
-    function withdraw(uint _amount) external {
+    function withdraw(uint _amount) external updateReward(msg.sender) {
         require(_amount > 0, "amount must be greater than zero");
         balanceOf[msg.sender] -= _amount;
         totalSupply -= _amount;
-        stakingToken.transfer(msg.sender,_amount)
+        stakingToken.transfer(msg.sender, _amount);
     }
 
     function lastTimeRewardApplicable() public view returns (uint) {
-        return _min(block.timestamp,finishAt);
-    }
-    function rewardPerToken() public view returns (uint) {
-        if(totalSupply == 0){
-            return rewardPerTokenStored;
-        }
-        return rewardPerTokenStored + (rewardRate *
-            (lastTimeRewardApplicable() - updatedAt) * 1e18
-        ) / totalSupply;
-    }
-    function earned(address _account) public view returns (uint) {
-        return balanceOf[_account] * (
-            (rewardPerToken() - userRewardPerTokenPaid[_account]) / 1e18
-        ) + rewards[_account];
+        return _min(block.timestamp, finishAt);
     }
 
-    function getReward() external {
-        // Code
+    function rewardPerToken() public view returns (uint) {
+        if (totalSupply == 0) {
+            return rewardPerTokenStored;
+        }
+        return
+            rewardPerTokenStored +
+            (rewardRate * (lastTimeRewardApplicable() - updatedAt) * 1e18) /
+            totalSupply;
+    }
+
+    function earned(address _account) public view returns (uint) {
+        return
+            ((balanceOf[_account] *
+                ((rewardPerToken() - userRewardPerTokenPaid[_account]))) /
+                1e18) + rewards[_account];
+    }
+
+    function getReward() external updateReward(msg.sender) {
+        uint reward = rewards[msg.sender];
+        if (reward > 0) {
+            rewards[msg.sender] = 0;
+            rewardsToken.transfer(msg.sender, reward);
+        }
     }
 
     function setRewardsDuration(uint _duration) external onlyOwner {
@@ -109,7 +124,9 @@ contract StakingRewards {
         duration = _duration;
     }
 
-    function notifyRewardAmount(uint _amount) external onlyOwner {
+    function notifyRewardAmount(
+        uint _amount
+    ) external onlyOwner updateReward(address(0)) {
         //    This function sets the rewardRate and time when the rewards end finishAt.
         // Only the owner can call
         // If previous reward period is expired (block.timestamp >= finishAt) then rewardRate is set to _amount / duration.
